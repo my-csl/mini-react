@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div>
+    <input type="text" name="" id="">
+  </div>
+  <button id="btn">btn</button>
+  <script>
+    const btn = document.querySelector('#btn')
+    let i = 0
+
+
+    btn.addEventListener('click', () => {
+      console.log('btn click', i++)
+    })
+
+    function loop() {
+      console.log('loop')
+      setTimeout(() => {
+        loop()
+      }, 2000)
+    }
+
+    // loop()
+  </script>
+  <!-- <script src="./main.js"></script> -->
+</body>
+
+</html>
