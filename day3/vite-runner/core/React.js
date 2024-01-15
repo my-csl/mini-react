@@ -46,6 +46,7 @@ function updateProps(dom, props) {
   });
 }
 
+// 将vdom转换为链表结构
 function initChildren(fiber, children) {
   let prevChild = null;
   children.forEach((child, index) => {
@@ -66,22 +67,32 @@ function initChildren(fiber, children) {
   });
 }
 
+function updateFunctionComponent(fiber) {
+  const children = [fiber.type(fiber.props)];
+  initChildren(fiber, children);
+}
+
+function updateHostComponent(fiber) {
+  // 1、创建dom
+  if (!fiber.dom) {
+    const dom = (fiber.dom = createDom(fiber.type));
+
+    // 2、设置 props，需要把children属性排除
+    updateProps(dom, fiber.props);
+  }
+
+  const children = fiber.props.children;
+  initChildren(fiber, children);
+}
+
 function preformOfWorkUnit(fiber) {
   const isFunctionComponent = typeof fiber.type === 'function';
 
-  if (!isFunctionComponent) {
-    // 1、创建dom
-    if (!fiber.dom) {
-      const dom = (fiber.dom = createDom(fiber.type));
-
-      // 2、设置 props，需要把children属性排除
-      updateProps(dom, fiber.props);
-    }
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber);
+  } else {
+    updateHostComponent(fiber);
   }
-
-  // 3、将vdom转换为链表结构
-  const children = isFunctionComponent ? [fiber.type(fiber.props)] : fiber.props.children;
-  initChildren(fiber, children);
 
   if (fiber.child) {
     return fiber.child;
