@@ -13,9 +13,12 @@ function createElement(type, props, ...children) {
     type,
     props: {
       ...props,
-      children: children.map((child) => {
-        return typeof child === 'string' ? createTextNode(child) : child;
-      })
+      children: children
+        .map((child) => {
+          const isTextNode = typeof child === 'string' || typeof child === 'number';
+          return isTextNode ? createTextNode(child) : child;
+        })
+        .filter(Boolean)
     }
   };
 }
@@ -43,8 +46,7 @@ function updateProps(dom, props) {
   });
 }
 
-function initChildren(fiber) {
-  const children = fiber.props.children;
+function initChildren(fiber, children) {
   let prevChild = null;
   children.forEach((child, index) => {
     const newFiber = {
@@ -64,37 +66,32 @@ function initChildren(fiber) {
   });
 }
 
-function findParentSibling(fiber) {
-  if (!fiber?.parent || fiber.parent?.sibling) {
-    return fiber.parent?.sibling;
-  }
-
-  return findParentSibling(fiber.parent);
-}
-
 function preformOfWorkUnit(fiber) {
-  // 1、创建dom
-  if (!fiber.dom) {
-    const dom = (fiber.dom = createDom(fiber.type));
-    // fiber.parent.dom.append(dom);
+  const isFunctionComponent = typeof fiber.type === 'function';
 
-    // 2、设置 props，需要把children属性排除
-    updateProps(dom, fiber.props);
+  if (!isFunctionComponent) {
+    // 1、创建dom
+    if (!fiber.dom) {
+      const dom = (fiber.dom = createDom(fiber.type));
+
+      // 2、设置 props，需要把children属性排除
+      updateProps(dom, fiber.props);
+    }
   }
 
   // 3、将vdom转换为链表结构
-  initChildren(fiber);
+  const children = isFunctionComponent ? [fiber.type(fiber.props)] : fiber.props.children;
+  initChildren(fiber, children);
 
   if (fiber.child) {
     return fiber.child;
   }
 
-  if (fiber.sibling) {
-    return fiber.sibling;
+  let nextFiber = fiber;
+  while (nextFiber) {
+    if (nextFiber.sibling) return nextFiber.sibling;
+    nextFiber = nextFiber.parent;
   }
-
-  return fiber.parent?.sibling;
-  //  || findParentSibling(fiber);
 }
 
 let root = null;
@@ -124,7 +121,14 @@ function commitRoot(fiber) {
 
 function commitWork(fiber) {
   if (!fiber) return;
-  fiber.parent.dom.append(fiber.dom);
+
+  if (fiber.dom) {
+    let parent = fiber.parent;
+    while (!parent.dom) {
+      parent = parent.parent;
+    }
+    parent.dom.append(fiber.dom);
+  }
 
   commitWork(fiber.child);
   commitWork(fiber.sibling);

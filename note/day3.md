@@ -25,3 +25,13 @@
 ### 思考
 
 把大任务分散成小任务，然后把小任务的结果收集，执行完以后统一返回大任务的结果
+
+## 实现 function component
+
+### 本质
+
+组件在使用的时候本质上也就是一个 jsx 标签，最后也是由 createElement 函数进行转化的，但是这个 createElement 的 type 是传递的函数式组件本身这个函数。所以我们在进行 render 的时候，如果是函数式组件，要通过执行 createElement 的 type 获取到 fiber 的 children，为啥是作为 children 呢？因为这个组件肯定是作为了其他元素的的子节点，他已经是一个 fiber 了，他要去执行自己的 children 进行渲染，然后他要渲染的内容就是函数式组件的返回值，也就是 createElement 参数的 type 参数，也是他自己这个 fiber 的 type 属性
+
+### 问题
+
+在执行的多个组件渲染的时候，有个组件忘记传递 num 了，然后一直失败，后面通过 debug 发现是有个 children 是 undefined，原来 num 没有传递然后成了 undefined 值，又在 createElement 的 children 转化时没处理，等 render 的时候就报错了。最后处理是把为 falsy 的 children 全部过滤了。
