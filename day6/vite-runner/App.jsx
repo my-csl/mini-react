@@ -23,7 +23,13 @@ function Counter({ num }) {
 }
 
 const bar = <div>bar</div>;
-const Foo = () => <p>foo</p>;
+const foo = (
+  <div>
+    foo
+    <div>child1</div>
+    <div>child2</div>
+  </div>
+);
 let showBar = true;
 
 function App() {
@@ -36,7 +42,8 @@ function App() {
     <div id="app">
       <h1>hello</h1>
       <h2>mini-react</h2>
-      <div>{showBar ? bar : <Foo />}</div>
+      {showBar && bar}
+      {/* <div>{showBar ? bar : foo}</div> */}
       <div>
         <button onClick={handleClick}>showBar</button>
       </div>

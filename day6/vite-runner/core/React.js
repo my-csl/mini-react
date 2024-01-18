@@ -13,12 +13,11 @@ function createElement(type, props, ...children) {
     type,
     props: {
       ...props,
-      children: children
-        .map((child) => {
-          const isTextNode = typeof child === 'string' || typeof child === 'number';
-          return isTextNode ? createTextNode(child) : child;
-        })
-        .filter(Boolean)
+      children: children.map((child) => {
+        const isTextNode = typeof child === 'string' || typeof child === 'number';
+        return isTextNode ? createTextNode(child) : child;
+      })
+      // .filter(Boolean)
     }
   };
 }
@@ -71,7 +70,7 @@ function reconcileChildren(fiber, children) {
   let oldFiber = fiber.alternate?.child;
   let prevChild = null;
   children.forEach((child, index) => {
-    const isSameType = oldFiber && oldFiber.type === child.type;
+    const isSameType = oldFiber && oldFiber.type === child?.type;
 
     let newFiber;
     if (isSameType) {
@@ -88,15 +87,17 @@ function reconcileChildren(fiber, children) {
         alternate: oldFiber
       };
     } else {
-      newFiber = {
-        type: child.type,
-        props: child.props,
-        parent: fiber,
-        child: null,
-        sibling: null,
-        dom: null,
-        effectTag: 'placement'
-      };
+      if (child) {
+        newFiber = {
+          type: child.type,
+          props: child.props,
+          parent: fiber,
+          child: null,
+          sibling: null,
+          dom: null,
+          effectTag: 'placement'
+        };
+      }
       if (oldFiber) {
         deletions.push(oldFiber);
       }
@@ -107,13 +108,21 @@ function reconcileChildren(fiber, children) {
       oldFiber = oldFiber.sibling;
     }
 
-    if (index === 0) {
+    if (index === 0 || !prevChild) {
       fiber.child = newFiber;
     } else {
       prevChild.sibling = newFiber;
     }
-    prevChild = newFiber;
+
+    if (newFiber) {
+      prevChild = newFiber;
+    }
   });
+
+  while (oldFiber) {
+    deletions.push(oldFiber);
+    oldFiber = oldFiber.sibling;
+  }
 }
 
 function updateFunctionComponent(fiber) {
