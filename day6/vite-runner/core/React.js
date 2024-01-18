@@ -126,6 +126,7 @@ function reconcileChildren(fiber, children) {
 }
 
 function updateFunctionComponent(fiber) {
+  wipFiber = fiber;
   const children = [fiber.type(fiber.props)];
   reconcileChildren(fiber, children);
 }
@@ -165,6 +166,7 @@ function preformOfWorkUnit(fiber) {
 
 // work in progress root 工作中的root
 let wipRoot = null;
+let wipFiber = null;
 let currentRoot = null;
 let nextWorkUnit = null;
 let deletions = [];
@@ -174,6 +176,11 @@ function workLoop(deadline) {
   while (!shouldYield && nextWorkUnit) {
     // dom 渲染
     nextWorkUnit = preformOfWorkUnit(nextWorkUnit);
+
+    if (wipRoot?.sibling?.type === nextWorkUnit?.type) {
+      nextWorkUnit = null;
+    }
+
     shouldYield = deadline.timeRemaining() < 1;
   }
 
@@ -187,13 +194,16 @@ function workLoop(deadline) {
 requestIdleCallback(workLoop);
 
 function update() {
-  wipRoot = {
-    dom: currentRoot.dom,
-    props: currentRoot.props,
-    alternate: currentRoot
-  };
+  let currentFiber = wipFiber;
 
-  nextWorkUnit = wipRoot;
+  return () => {
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber
+    };
+
+    nextWorkUnit = wipRoot;
+  };
 }
 
 function commitDeletion(fiber) {
@@ -210,6 +220,7 @@ function commitDeletion(fiber) {
 
 function commitRoot() {
   deletions.forEach(commitDeletion);
+  console.log(wipRoot);
   commitWork(wipRoot.child);
   currentRoot = wipRoot;
   wipRoot = null;

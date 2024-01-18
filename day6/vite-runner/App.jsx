@@ -22,32 +22,62 @@ function Counter({ num }) {
   );
 }
 
-const bar = <div>bar</div>;
-const foo = (
-  <div>
-    foo
-    <div>child1</div>
-    <div>child2</div>
-  </div>
-);
-let showBar = true;
+let barCount = 0;
+function Bar() {
+  const update = React.update();
 
-function App() {
   const handleClick = () => {
-    showBar = !showBar;
-    React.update();
+    barCount++;
+    update();
   };
 
+  console.log('Bar render');
+  return (
+    <div>
+      bar: {barCount}
+      <button onClick={handleClick}>+1</button>
+    </div>
+  );
+}
+
+let fooCount = 0;
+function Foo() {
+  const update = React.update();
+
+  const handleClick = () => {
+    fooCount++;
+    update();
+  };
+
+  console.log('Foo render');
+  return (
+    <div>
+      foo: {fooCount}
+      <button onClick={handleClick}>+1</button>
+    </div>
+  );
+}
+
+let appCount = 0;
+function App() {
+  const update = React.update();
+
+  const handleClick = () => {
+    appCount++;
+    update();
+  };
+
+  console.log('App render');
   return (
     <div id="app">
       <h1>hello</h1>
       <h2>mini-react</h2>
-      {showBar && bar}
-      {/* <div>{showBar ? bar : foo}</div> */}
-      <div>
-        <button onClick={handleClick}>showBar</button>
-      </div>
-      {/* <Counter num={10} /> */}
+      app: {appCount}
+      <button onClick={handleClick}>+1</button>
+      <hr />
+      <Bar />
+      <hr />
+      <Foo />
     </div>
   );
 }
